@@ -117,7 +117,7 @@ Para calcular el valor de un elemento en la matriz resultado, utilizo el tercer 
 
 ## Ejecución
 
-Este código se puede compilar y ejecutar en un entorno de desarrollo de C. El programa solicitará que ingreses los elementos de la primera y segunda matriz, pero en el código proporcionado, las matrices ya se han inicializado con valores predefinidos para facilitar la prueba.
+Este código se puede compilar y ejecutar en un entorno de desarrollo de C. El programa esta hecho para que quitamdo unos comentarios te pueda solicitar que ingreses los elementos de la primera y segunda matriz, pero en el código actual sin comentarios, las matrices ya se han inicializado con valores predefinidos para facilitar la prueba.
 
 ## Conclusiones
 
