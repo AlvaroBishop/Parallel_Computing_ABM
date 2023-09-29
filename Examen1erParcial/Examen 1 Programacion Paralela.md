@@ -130,5 +130,7 @@ int main() {
 }
 -
 
-El algoritmo sort tiene una complejidad de O(n log n), el for triple anidado tiene una complejidad de O(n^3), por lo tanto la complejidad del algoritmo es de  O(n^3)
+
 ```
+
+El algoritmo sort tiene una complejidad de O(n log n), el for triple anidado tiene una complejidad de O(n^3), por lo tanto la complejidad del algoritmo es de  O(n^3)
