@@ -121,7 +121,7 @@ Este código se puede compilar y ejecutar en un entorno de desarrollo de C. El p
 
 ## Conclusiones
 
-Este proyecto proporciona una implementación básica de operaciones matriciales en C. Puedes expandirlo agregando funciones adicionales o trabajando con matrices de diferentes tamaños. Además, puedes permitir que el usuario ingrese valores para las matrices en lugar de utilizar valores predefinidos.
+Este proyecto proporciona una implementación básica de operaciones matriciales en C. Se puede expandir agregando funciones adicionales o trabajando con matrices de diferentes tamaños. Además, puede permitir que el usuario ingrese valores para las matrices en lugar de utilizar valores predefinidos.
 
 
 
