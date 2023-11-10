@@ -27,28 +27,41 @@
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
 **GPU activities:**
-    
-[CUDA memcpy DtoH] Estas llamadas representan transferencias de memoria desde el dispositivo (GPU) a la memoria principal (Host). Esta actividad ocupa el 80.19% del tiempo de ejecución y se llama dos veces. 
-  
-[CUDA memcpy HtoD]:  Esta llamada representa una transferencia de memoria desde la memoria principal al dispositivo. Esta actividad ocupa el 18.05% del tiempo de ejecución y se llama una vez. 
-        
- __warmup(innerStruct_, innerStruct_, int): Esta actividad ocupa el 0.88% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 256.10 us. 
-        
- __testInnerStruct(innerStruct_, innerStruct_, int): Esta actividad también ocupa el 0.88% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 255.85 us. 
-            
-cudaMalloc:  Se utiliza para asignar memoria en el dispositivo.
-        
-cudaDeviceReset: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo.
-        
-cudaMemcpy: Esta llamada ocupa el 4.90% del tiempo de ejecución y se llama tres veces. Se utiliza para copiar datos entre el dispositivo y la memoria principal.
-        
-cuDeviceGetPCIBusId: Esta llamada ocupa el 0.34% del tiempo de ejecución y se llama una vez. Se utiliza para obtener el identificador del bus PCI del dispositivo.
-        
-cudaFree: Esta llamada ocupa el 0.19% del tiempo de ejecución y se llama dos veces.  Se utiliza para liberar la memoria asignada previamente en el dispositivo.
-        
-cudaDeviceSynchronize: Esta llamada ocupa el 0.11% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 334.95 us. Se utiliza para sincronizar el dispositivo.
-        
-cudaLaunchKernel: Esta llamada ocupa el 0.03% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 80.800 us. Se utiliza para lanzar un kernel en el dispositivo.
+
+CUDA memcpy DtoH (Copy Device to Host): Esto se refiere a operaciones de copia de datos desde la memoria del dispositivo (GPU) a la memoria del host (CPU). En este caso, hubo dos llamadas que consumieron un 80.19% del tiempo de GPU. Estas operaciones de copia pueden ser costosas en términos de tiempo y se utilizan para transferir datos de vuelta desde la GPU a la CPU. El código es llamado en la línea 130 y envía el valor d_A de vuelta a h_A el proceso toma más tiempo que los demás debido a que está trabajando a una tasa de latencia más alta que en el caso del HtoD para recibir datos.
+
+CUDA memcpy HtoD (Copy Host to Device): Esta actividad implica la copia de datos desde la memoria del host (CPU) a la memoria del dispositivo (GPU). En este caso, hubo una sola llamada que consumió el 18.05% del tiempo de GPU. Estas operaciones son necesarias para enviar datos desde la CPU a la GPU para su procesamiento. Es llamado en la línea 148 y envía de vuelta el valor d_C a gpuRef, que también es una variable innerStruct, fijada con la función malloc y un tamaño de la variable nBytes. 
+
+Funciones globales llamadas en el procesador para llamar al dispositivo que es la GPU. 
+warmup(innerStruct, innerStruct, int):** Esta función tomó un 0.88% del tiempo de GPU y se relaciona con operaciones de la aplicación que involucran una estructura denominada innerStruct.
+
+testInnerStruct(innerStruct, innerStruct, int):** Esta función también tomó un 0.88% del tiempo de GPU y está relacionada con operaciones que involucran la estructura innerStruct.
+
+**API calls:**
+cudaMalloc: Esta llamada a la API se utiliza para asignar memoria en la GPU. Consumió un 88.83% del tiempo de GPU en 2 llamadas. En general, se utiliza para asignar memoria en el dispositivo para almacenar datos o resultados intermedios. cudaMalloc se llama en la línea 126 y 127 para asignar la memoria de la innerstruct a las variables del dispositivo que son d_A y d_C, con el tamaño nBytes. 
+Esto tomó más tiempo debido a la asignación de memoria al dispositivo y al tiempo que tomó transferir la memoria desde el host al dispositivo.
+
+cudaDeviceReset: Consumió un 5.61% del tiempo de GPU y se utiliza para reiniciar el dispositivo. Esto es útil para liberar recursos de la GPU al final de la ejecución.
+
+cudaMemcpy: Esta llamada se utiliza para copiar datos entre la memoria del dispositivo y la memoria del host. Consumió un 4.90% del tiempo de GPU en 3 llamadas.
+
+cuDeviceGetPCIBusId: Esta llamada obtiene el identificador de bus PCI del dispositivo. Consumió un 0.34% del tiempo de GPU.
+
+cudaFree: Esta llamada se utiliza para liberar la memoria asignada previamente en la GPU. Consumió un 0.19% del tiempo de GPU en 2 llamadas.
+
+cudaDeviceSynchronize: Consumió un 0.11% del tiempo de GPU y se utiliza para sincronizar la ejecución del dispositivo con el host.
+
+cudaLaunchKernel: Se utiliza para lanzar un kernel CUDA en la GPU. Consumió un 0.03% del tiempo de GPU en 2 llamadas.
+
+cuDeviceGetAttribute: Obtiene atributos del dispositivo. Consumió un 0.00% del tiempo de GPU en 101 llamadas.
+
+cudaSetDevice: Se utiliza para seleccionar un dispositivo de GPU específico. Consumió un 0.00% del tiempo de GPU en 1 llamada.
+
+cudaGetLastError: Se utiliza para verificar si ocurrieron errores en las operaciones de GPU. Consumió un 0.00% del tiempo de GPU en 2 llamadas.
+
+cudaGetDeviceProperties: Se utiliza para obtener propiedades del dispositivo. Consumió un 0.00% del tiempo de GPU en 1 llamada.
+
+cuDeviceGetCount: Obtiene el número de dispositivos disponibles. Consumió un 0.00% del tiempo de GPU en 3 llamadas.
 
 ---
 ### SimpleMathSoA
@@ -79,28 +92,31 @@ cudaLaunchKernel: Esta llamada ocupa el 0.03% del tiempo de ejecución y se llam
                     0.00%     300ns         1     300ns     300ns     300ns  cuDeviceTotalMem
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
+**GPU activities:**
+[CUDA memcpy DtoH]: Esta actividad ocupa el 73.35% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 6.1076 ms, con un mínimo de 3.7599 ms y un máximo de 8.4554 ms. Se llama en las líneas 160 y 170, lo que envía el valor de d_C a gpuRef, que es el InnerArray en la GPU, a los datos en el dispositivo, que es el InnerArray de la CPU. el proceso toma más tiempo que los demás debido a que está trabajando a una tasa de latencia más alta que en el caso del HtoD para recibir datos.
 
-[CUDA memcpy DtoH]: Estas llamadas representan transferencias de memoria desde el dispositivo (GPU) a la memoria principal (Host). Esta actividad ocupa el 73.35% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 6.1076 ms, con un mínimo de 3.7599 ms y un máximo de 8.4554 ms. Estas transferencias de memoria son críticas para copiar resultados o datos desde la GPU a la CPU.
+[CUDA memcpy HtoD]: Esta actividad ocupa el 23.58% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 3.9265 ms. El código se llama en la línea 142 y envía el valor h_A de regreso a d_A, que también es una variable innerStruct, configurada con la función malloc y con un tamaño de nBytes.
 
-[CUDA memcpy HtoD]: Esta llamada representa una transferencia de memoria desde la memoria principal al dispositivo. Esta actividad ocupa el 23.58% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 3.9265 ms. Esta transferencia es crucial para cargar datos desde la CPU a la GPU antes de la ejecución del kernel en el dispositivo.
+warmup2(InnerArray*, InnerArray*, int): Esta actividad ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 256.42 us. En las líneas 105 a 110, modificamos los valores del array proporcionado en el parámetro y los guardamos en el resultado que se devuelve, que es el innerArray d_C.
 
-warmup2(InnerArray*, InnerArray*, int): Esta actividad ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 256.42 us. Esta función parece ser un kernel que realiza cálculos en la GPU y se ejecuta durante la fase de "calentamiento" (warm-up) del programa.
+testInnerArray(InnerArray*, InnerArray*, int): Esta actividad también ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 256.03 us. El kernel modifica el array al recibirlo, alterando los valores de x e y y configurándolo como el resultado que se envía de vuelta.
 
-testInnerArray(InnerArray*, InnerArray*, int): Esta actividad también ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 256.03 us. Similar a la función anterior, esta es otro kernel que realiza cálculos en la GPU.
+**API calls:**
 
-cudaMalloc: Se utiliza para asignar memoria en el dispositivo. Esta llamada ocupa el 90.98% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 292.45 ms. La asignación de memoria en el dispositivo es una parte fundamental de la preparación de datos para su procesamiento en la GPU.
+cudaMalloc: Esta llamada ocupa el 90.98% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 292.45 ms. 
+Esto tomó más tiempo debido a la asignación de memoria al dispositivo y al tiempo que tomó transferir la memoria desde el host al dispositivo.
 
-cudaDeviceReset: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Esta llamada ocupa el 5.47% del tiempo de ejecución y se llama una vez. Su principal función es restablecer el estado del dispositivo de GPU.
+cudaDeviceReset:Esta llamada ocupa el 5.47% del tiempo de ejecución y se llama una vez. 
 
-cudaMemcpy: Esta llamada ocupa el 2.89% del tiempo de ejecución y se llama tres veces. Se utiliza para copiar datos entre el dispositivo y la memoria principal. El tiempo promedio para estas llamadas es de 6.1881 ms. La copia de datos entre la GPU y la CPU es una operación común en las aplicaciones de CUDA.
+cudaMemcpy: Esta llamada ocupa el 2.89% del tiempo de ejecución y se llama tres veces.  El tiempo promedio para estas llamadas es de 6.1881 ms.
 
-cuDeviceGetPCIBusId: Esta llamada ocupa el 0.39% del tiempo de ejecución y se llama una vez. Se utiliza para obtener el identificador del bus PCI del dispositivo. Esto puede ser útil para identificar la GPU en un sistema multi-GPU.
+cuDeviceGetPCIBusId: Esta llamada ocupa el 0.39% del tiempo de ejecución y se llama una vez.
 
-cudaFree: Esta llamada ocupa el 0.15% del tiempo de ejecución y se llama dos veces. Se utiliza para liberar la memoria asignada previamente en el dispositivo, lo que es importante para la gestión de recursos en CUDA.
+cudaFree: Esta llamada ocupa el 0.15% del tiempo de ejecución y se llama dos veces. 
 
-cudaDeviceSynchronize: Esta llamada ocupa el 0.11% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 341.10 us. Se utiliza para sincronizar el dispositivo, asegurando que todas las tareas en la GPU se completen antes de continuar con la ejecución en la CPU.
+cudaDeviceSynchronize: Esta llamada ocupa el 0.11% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 341.10 us.
 
-cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 47.100 us. Se utiliza para lanzar un kernel en el dispositivo, lo que inicia la ejecución paralela en la GPU.
+cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio es de 47.100 us.
 
 ---
 ### sumArrayZerocpy
@@ -133,52 +149,50 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
 
+**GPU activities:**
 
-
-`sumArraysZeroCopy(float*, float*, float*, int)`: Esta actividad ocupa el 33.33% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 3.5200 us. Esta función representa una operación en la GPU llamada "sumArraysZeroCopy", que trabaja con tres arreglos de tipo float y un entero como argumentos.
+`sumArraysZeroCopy(float*, float*, float*, int)`: Esta actividad ocupa el 33.33% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 3.5200 us. La función sumArraysZeroCopy(float*, float*, float*, int) realiza la suma de dos matrices directamente en la memoria unificada sin copiar los datos de un lugar a otro, lo que ahorra tiempo y ancho de banda de memoria. El motivo por el que este kernel dura más es porque se ejecuta con memoria sin copias, lo que significa que el kernel se llama sin usar memoria copiada, lo que lo hace más lento. 
     
-`[CUDA memcpy DtoH]`: Estas llamadas representan transferencias de memoria desde el dispositivo (GPU) a la memoria principal (Host). Esta actividad ocupa el 22.73% del tiempo de ejecución y se llama dos veces. Se utiliza para copiar datos desde la GPU a la memoria principal.
+`[CUDA memcpy DtoH]`: Estas llamadas representan transferencias de memoria desde el dispositivo (GPU) a la memoria principal (Host). Esta actividad ocupa el 22.73% del tiempo de ejecución y se llama dos veces. Este proceso se llama en las líneas 141 y 176, y copia la memoria del resultado que generó el kernel "d_C" al gpuRef.
     
 `sumArrays(float*, float*, float*, int)`: Esta actividad ocupa el 22.12% del tiempo de ejecución y se llama una vez. El tiempo promedio es de 2.3360 us. Esta función representa otra operación en la GPU llamada "sumArrays", que trabaja con tres arreglos de tipo float y un entero como argumentos.
     
-`[CUDA memcpy HtoD]`: Esta llamada representa una transferencia de memoria desde la memoria principal al dispositivo. Esta actividad ocupa el 21.82% del tiempo de ejecución y se llama dos veces. Se utiliza para copiar datos desde la memoria principal a la GPU.
+`[CUDA memcpy HtoD]`:  Esta actividad ocupa el 21.82% del tiempo de ejecución y se llama dos veces. Esa función se llama en las líneas 130 y 131 y copia los datos del host al dispositivo. No tarda mucho, ya que el reloj en el dispositivo es más rápido y puede procesar los datos más rápido que si fuese de DtoH.
     
-
-
-
-`cudaMalloc`: Esta llamada ocupa el 94.24% del tiempo de ejecución y se llama tres veces. Se utiliza para asignar memoria en el dispositivo (GPU). El tiempo promedio de ejecución es de 194.38 ms. Es una operación costosa en términos de tiempo.
+**API calls:**
+`cudaMalloc`: Esta llamada ocupa el 94.24% del tiempo de ejecución y se llama tres veces.El tiempo promedio de ejecución es de 194.38 ms.Esto tomó más tiempo debido a la asignación de memoria al dispositivo y al tiempo que tomó transferir la memoria desde el host al dispositivo.
     
 `cudaDeviceReset`: La función `cudaDeviceReset` ocupa el 5.09% del tiempo de ejecución y se llama una vez. Se utiliza para reiniciar el dispositivo (GPU).
     
-`cuDeviceGetPCIBusId`: Esta llamada ocupa el 0.35% del tiempo de ejecución y se llama una vez. Se utiliza para obtener el identificador del bus PCI del dispositivo (GPU).
+`cuDeviceGetPCIBusId`: Esta llamada ocupa el 0.35% del tiempo de ejecución y se llama una vez. 
     
-`cudaHostAlloc`: Esta llamada ocupa el 0.16% del tiempo de ejecución y se llama dos veces. Se utiliza para asignar memoria en el host.
+`cudaHostAlloc`: Esta llamada ocupa el 0.16% del tiempo de ejecución y se llama dos veces.
     
 `cudaFreeHost`: Esta llamada ocupa el 0.06% del tiempo de ejecución y se llama dos veces. Se utiliza para liberar la memoria asignada previamente en el host.
     
-`cudaMemcpy`: Esta llamada ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. Se utiliza para copiar datos entre el dispositivo y la memoria principal.
+`cudaMemcpy`: Esta llamada ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. 
     
-`cudaFree`: Esta llamada ocupa el 0.04% del tiempo de ejecución y se llama tres veces. Se utiliza para liberar la memoria asignada previamente en el dispositivo.
+`cudaFree`: Esta llamada ocupa el 0.04% del tiempo de ejecución y se llama tres veces.
     
 `cudaLaunchKernel`: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llama dos veces. Se utiliza para lanzar un kernel en el dispositivo. El tiempo promedio de ejecución es de 30.150 us.
     
-`cuDeviceGetAttribute`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. Se utiliza para obtener atributos del dispositivo.
+`cuDeviceGetAttribute`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama 101 veces.
     
-`cudaSetDevice`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. Se utiliza para seleccionar un dispositivo.
+`cudaSetDevice`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. 
     
-`cudaGetDeviceProperties`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. Se utiliza para obtener las propiedades del dispositivo.
+`cudaGetDeviceProperties`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez.
     
-`cudaHostGetDevicePointer`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama dos veces. Se utiliza para obtener un puntero de dispositivo a partir de un puntero de host.
+`cudaHostGetDevicePointer`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama dos veces. 
     
-`cuDeviceGetCount`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama tres veces. Se utiliza para obtener el número de dispositivos.
+`cuDeviceGetCount`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama tres veces.
     
-`cuDeviceGet`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama dos veces. Se utiliza para obtener información sobre el dispositivo.
+`cuDeviceGet`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama dos veces. 
     
-`cuDeviceGetName`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. Se utiliza para obtener el nombre del dispositivo.
+`cuDeviceGetName`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez.
+
+`cuDeviceTotalMem`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. 
     
-`cuDeviceTotalMem`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. Se utiliza para obtener la cantidad total de memoria en el dispositivo.
-    
-`cuDeviceGetUuid`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. Se utiliza para obtener un identificador único del dispositivo.
+`cuDeviceGetUuid`: Esta llamada ocupa el 0.00% del tiempo de ejecución y se llama una vez. 
 
 ---
 ###   sumMatrixGPUManaged
@@ -207,40 +221,39 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
 ~~~
 
 
+**GPU activities:**
+`sumMatrixGPU(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de un kernel llamado "sumMatrixGPU", que opera en matrices en el dispositivo GPU. Ocupa el 100.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 6.4741 ms, con un mínimo de 288.67 us y un máximo de 12.660 ms. El hecho de que esta función represente el 100% del tiempo de la GPU se debe a que es la única operación que se lleva a cabo en la GPU. 
 
-`sumMatrixGPU(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de un kernel llamado "sumMatrixGPU", que opera en matrices en el dispositivo GPU. Ocupa el 100.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 6.4741 ms, con un mínimo de 288.67 us y un máximo de 12.660 ms. Este kernel es la parte central del código y se encarga de realizar la suma de matrices en la GPU.
-
-
-
-`cudaMallocManaged`: Esta llamada se utiliza para asignar memoria unificada en el dispositivo y la memoria principal. Ocupa el 91.39% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 203.85 ms, con un mínimo de 27.532 ms y un máximo de 731.17 ms. Esta función se utiliza para asignar memoria gestionada en el dispositivo.
+**API calls:**
+`cudaMallocManaged`: Ocupa el 91.39% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 203.85 ms, con un mínimo de 27.532 ms y un máximo de 731.17 ms. Se llaman en las líneas 110 a 113 para usar la asignación de memoria de todas las variables usadas para referencias y las matrices. Toma más tiempo debido al tamaño de la memoria que está utilizando y al hecho de que debe compartir la memoria tanto en el dispositivo como en el host.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Ocupa el 3.45% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 30.801 ms.
+`cudaDeviceReset`: Ocupa el 3.45% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 30.801 ms.
     
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo. Ocupa el 3.31% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 7.3922 ms, con un mínimo de 7.2484 ms y un máximo de 7.4490 ms.
+`cudaFree`: Ocupa el 3.31% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 7.3922 ms, con un mínimo de 7.2484 ms y un máximo de 7.4490 ms.
     
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo. Ocupa el 1.52% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 13.583 ms.
+`cudaDeviceSynchronize`: Ocupa el 1.52% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 13.583 ms.
     
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.24% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.1681 ms.
+`cuDeviceGetPCIBusId`: Ocupa el 0.24% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.1681 ms.
     
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo. Ocupa el 0.07% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 322.10 us, con un mínimo de 11.200 us y un máximo de 633.00 us.
+`cudaLaunchKernel`: Ocupa el 0.07% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 322.10 us, con un mínimo de 11.200 us y un máximo de 633.00 us.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 139 ns, con un mínimo de 100 ns y un máximo de 900 ns.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 139 ns, con un mínimo de 100 ns y un máximo de 900 ns.
     
--   `cudaSetDevice`: Se utiliza para seleccionar el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.8000 us.
+-   `cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.8000 us.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.0000 us.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.0000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
     
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
+`cudaGetLastError`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
     
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
     
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la memoria total del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
+`cuDeviceTotalMem`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
     
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
+`cuDeviceGetUuid`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
 
 ---
 ###   sumMatrixGPUManual
@@ -275,47 +288,50 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
 
 
 
+**GPU activities:**
+[CUDA memcpy DtoH] ocupa el 56.34% del tiempo de la GPU, con un tiempo total de 42.887 milisegundos. La operación llamada en la línea 158 copia datos desde el producto del dispositivo d_MatC al array del host h_C. Los datos de origen residen en la memoria de la GPU y se transfieren a la memoria de la CPU.
 
-`CUDA memcpy HtoD` y `CUDA memcpy DtoH`: Estas actividades representan transferencias de memoria desde la CPU al GPU (HtoD) y desde el GPU a la CPU (DtoH). En este caso, se observa que estas operaciones ocupan el 65.52% y el 30.63% del tiempo de ejecución, respectivamente. Se realizan 2 llamadas a la transferencia HtoD y 1 llamada a la transferencia DtoH. El tiempo promedio de ejecución de las transferencias HtoD es de 13.550 ms, con un mínimo de 8.3698 ms y un máximo de 18.731 ms. Para la transferencia DtoH, el tiempo promedio de ejecución es de 12.669 ms, con un mínimo y máximo de 12.669 ms. Estas transferencias son esenciales para mover datos entre la CPU y el GPU y son un componente significativo del tiempo de ejecución.
+[CUDA memcpy HtoD] representa el 40.11% del tiempo de la GPU, con un tiempo total de 30.532 milisegundos. Implica la copia de memoria desde el host (CPU) al dispositivo (GPU). La operación llamada en las líneas 147 y 148 copia datos desde los arrays del host h_A y h_B a los arrays del dispositivo d_MatA y d_MatB. Los datos de origen residen en la memoria de la CPU y se transfieren a la memoria de la GPU.
     
-`sumMatrixGPU(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de un kernel llamado "sumMatrixGPU" que opera en matrices en el dispositivo GPU. Ocupa el 2.69% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 555.89 us, con un mínimo de 288.73 us y un máximo de 823.04 us. Este kernel es la parte central del código y se encarga de realizar la suma de matrices en la GPU.
+`sumMatrixGPU(float*, float*, float*, int, int)`: Ocupa el 2.69% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 555.89 us, con un mínimo de 288.73 us y un máximo de 823.04 us. e llama en la línea 151 y tiene como parámetros las dimensiones de la matriz y las matrices que el dispositivo utilizará y almacenará con 'd_MatA, d_MatB, d_MatC'.
     
-`CUDA memset`: Esta actividad representa llamadas a la función `cudaMemset` que se utiliza para llenar una región de memoria con un valor específico. Ocupa el 1.16% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 239.71 us, con un mínimo de 238.91 us y un máximo de 240.51 us.
+`CUDA memset`: Ocupa el 1.16% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 239.71 us, con un mínimo de 238.91 us y un máximo de 240.51 us. Realiza una operación por la cantidad de bytes determinada por el parámetro '0', y luego devuelve un puntero similar a la entrada 'ptr'.
    
-
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo GPU. Ocupa el 87.57% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 202.39 ms, con un mínimo de 713.10 us y un máximo de 605.72 ms. Esta función se utiliza para asignar memoria en el dispositivo.
+   
+**API calls:**
+`cudaMalloc`: Ocupa el 87.57% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 202.39 ms, con un mínimo de 713.10 us y un máximo de 605.72 ms.
     
-`cudaMemcpy`: Esta llamada se utiliza para copiar datos entre la CPU y el GPU. Ocupa el 6.50% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 15.013 ms, con un mínimo de 8.6183 ms y un máximo de 23.545 ms.
+`cudaMemcpy`: Ocupa el 6.50% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 15.013 ms, con un mínimo de 8.6183 ms y un máximo de 23.545 ms.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo GPU. Ocupa el 5.26% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 36.474 ms.
+`cudaDeviceReset`: Ocupa el 5.26% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 36.474 ms.
     
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.33% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.2576 ms.
+`cuDeviceGetPCIBusId`: Ocupa el 0.33% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.2576 ms.
     
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo. Ocupa el 0.19% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 441.87 us, con un mínimo de 223.90 us y un máximo de 799.30 us.
+`cudaFree`: Ocupa el 0.19% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 441.87 us, con un mínimo de 223.90 us y un máximo de 799.30 us.
     
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo GPU. Ocupa el 0.13% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 929.30 us.
+`cudaDeviceSynchronize`: Ocupa el 0.13% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 929.30 us.
     
-`cudaMemset`: Esta llamada se utiliza para llenar una región de memoria con un valor específico. Ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 31.350 us, con un mínimo de 24.300 us y un máximo de 38.400 us.
+`cudaMemset`: Ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 31.350 us, con un mínimo de 24.300 us y un máximo de 38.400 us.
     
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo GPU. Ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 31.250 us, con un mínimo de 28.200 us y un máximo de 34.300 us.
+`cudaLaunchKernel`: EOcupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 31.250 us, con un mínimo de 28.200 us y un máximo de 34.300 us.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 154 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 154 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
     
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.3000 us.
+`cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.3000 us.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.1000 us.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.1000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos GPU. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 433 ns, con un mínimo de 200 ns y un máximo de 900 ns.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 433 ns, con un mínimo de 200 ns y un máximo de 900 ns.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 500 ns, con un mínimo de 200 ns y un máximo de 800 ns.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 500 ns, con un mínimo de 200 ns y un máximo de 800 ns.
     
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
+`cudaGetLastError`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
     
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 1.1000 us.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 1.1000 us.
     
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la memoria total del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
+`cuDeviceTotalMem`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
     
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
+`cuDeviceGetUuid`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
 
 ---
 ###   transpose
@@ -345,44 +361,46 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     400ns         1     400ns     400ns     400ns  cuDeviceTotalMem
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
-`[CUDA memcpy HtoD]`: Esta actividad representa la copia de memoria desde la CPU hacia el GPU (Host to Device). Ocupa el 86.82% del tiempo de ejecución. Se llama una vez y toma 1.9853 ms en promedio. El tiempo mínimo y máximo de ejecución son iguales a 1.9853 ms.
-    
-`copyRow(float*, float*, int, int)`: Esta actividad representa la ejecución de un kernel llamado `copyRow`, que opera en el dispositivo GPU. Ocupa el 6.62% del tiempo de ejecución, se llama una vez y toma en promedio 151.49 us por llamada. El tiempo mínimo y máximo de ejecución son iguales a 151.49 us.
-    
-`warmup(float*, float*, int, int)`: Esta actividad representa la ejecución de un kernel llamado `warmup`, que opera en el dispositivo GPU. Ocupa el 6.56% del tiempo de ejecución, se llama una vez y toma en promedio 150.02 us por llamada. El tiempo mínimo y máximo de ejecución son iguales a 150.02 us.
-    
 
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo. Ocupa el 86.44% del tiempo de ejecución, se llama dos veces, y toma en promedio 317.05 ms por llamada. El tiempo mínimo y máximo de ejecución son 434.00 us y 633.66 ms, respectivamente.
+**GPU activities:**
+`[CUDA memcpy HtoD]`: Ocupa el 86.82% del tiempo de ejecución. Se llama una vez y toma 1.9853 ms en promedio. El tiempo mínimo y máximo de ejecución son iguales a 1.9853 ms. Es la actividad que más tiempo ocupa en la GPU; la tarea más prolongada para la GPU es copiar las memorias de las variables desde el host y establecerlas en el dispositivo.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Ocupa el 12.79% del tiempo de ejecución, se llama una vez y toma 93.791 ms.
+`copyRow(float*, float*, int, int)`: Parece ser un kernel que se ejecuta en la GPU. Su función implica copiar una fila específica de una matriz (representada por un puntero a float) en otra matriz. El tiempo promedio por llamada es de 151.49 microsegundos, lo que parece ser relativamente consistente, ya que el mínimo y el máximo coinciden con el tiempo promedio. Aunque ocupa solo el 6.62% del tiempo de ejecución, es una operación significativa y se llama una vez en esta ejecución. Llamado en la línea 321 como un caso 0, unsigned int ix y unsigned int iy
+    
+`warmup(float*, float*, int, int)`: Ocupa el 6.56% del tiempo de ejecución, se llama una vez y toma en promedio 150.02 us por llamada. El tiempo mínimo y máximo de ejecución son iguales a 150.02 us.
+
+**API calls:**    
+`cudaMalloc`: Ocupa el 86.44% del tiempo de ejecución, se llama dos veces, y toma en promedio 317.05 ms por llamada. El tiempo mínimo y máximo de ejecución son 434.00 us y 633.66 ms, respectivamente.
+    
+`cudaDeviceReset`: Ocupa el 12.79% del tiempo de ejecución, se llama una vez y toma 93.791 ms.
     
 `cudaMemcpy`: Esta llamada se utiliza para copiar datos entre la CPU y el GPU. Ocupa el 0.32% del tiempo de ejecución, se llama una vez y toma 2.3634 ms.
     
 `cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.31% del tiempo de ejecución, se llama una vez y toma 2.2569 ms.
     
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo. Ocupa el 0.07% del tiempo de ejecución, se llama dos veces, y toma en promedio 202.25 us por llamada. El tiempo mínimo y máximo de ejecución son 166.80 us y 237.70 us, respectivamente.
+`cudaFree`: Ocupa el 0.07% del tiempo de ejecución, se llama dos veces, y toma en promedio 202.25 us por llamada. El tiempo mínimo y máximo de ejecución son 166.80 us y 237.70 us, respectivamente.
     
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo. Ocupa el 0.06% del tiempo de ejecución, se llama dos veces, y toma en promedio 166.80 us por llamada. El tiempo mínimo y máximo de ejecución son 222.60 us y 327.20 us, respectivamente.
+`cudaDeviceSynchronize`: Ocupa el 0.06% del tiempo de ejecución, se llama dos veces, y toma en promedio 166.80 us por llamada. El tiempo mínimo y máximo de ejecución son 222.60 us y 327.20 us, respectivamente.
     
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo. Ocupa el 0.01% del tiempo de ejecución, se llama 101 veces, y toma en promedio 28.500 us por llamada. El tiempo mínimo y máximo de ejecución son 15.400 us y 41.600 us, respectivamente.
+`cudaLaunchKernel`: Ocupa el 0.01% del tiempo de ejecución, se llama 101 veces, y toma en promedio 28.500 us por llamada. El tiempo mínimo y máximo de ejecución son 15.400 us y 41.600 us, respectivamente.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama 101 veces, y toma en promedio 163 ns por llamada. El tiempo mínimo y máximo de ejecución son 100 ns y 1.2000 us, respectivamente.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución, se llama 101 veces, y toma en promedio 163 ns por llamada. El tiempo mínimo y máximo de ejecución son 100 ns y 1.2000 us, respectivamente.
     
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 5.4000 us.
+`cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 5.4000 us.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 5.0000 us.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 5.0000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos. Ocupa el 0.00% del tiempo de ejecución, se llama tres veces, y toma en promedio 466 ns por llamada. El tiempo mínimo y máximo de ejecución son 100 ns y 1.1000 us, respectivamente.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución, se llama tres veces, y toma en promedio 466 ns por llamada. El tiempo mínimo y máximo de ejecución son 100 ns y 1.1000 us, respectivamente.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama dos veces, y toma en promedio 500 ns por llamada. El tiempo mínimo y máximo de ejecución son 200 ns y 800 ns, respectivamente.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución, se llama dos veces, y toma en promedio 500 ns por llamada. El tiempo mínimo y máximo de ejecución son 200 ns y 800 ns, respectivamente.
     
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 900 ns.
+`cudaGetLastError`:Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 900 ns.
     
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 700 ns.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 700 ns.
     
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la memoria total del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 300 ns.
+`cuDeviceTotalMem`: Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 300 ns.
     
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo. Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 200 ns.
+`cuDeviceGetUuid`: Ocupa el 0.00% del tiempo de ejecución, se llama una vez y toma 200 ns.
 
 ---
 
@@ -416,42 +434,48 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     300ns         1     300ns     300ns     300ns  cuDeviceTotalMem
                     0.00%     100ns         1     100ns     100ns     100ns  cuDeviceGetUuid
 ~~~
-
-`CUDA memcpy DtoH`: Esta actividad representa la transferencia de datos desde el dispositivo GPU a la memoria principal (host). Ocupa el 65.98% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 704.29 us, con un mínimo de 518.98 us y un máximo de 921.45 us. Estas operaciones son esenciales para obtener resultados del dispositivo a la CPU.
+**GPU activities:**
+`CUDA memcpy DtoH`:Ocupa el 65.98% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 704.29 us, con un mínimo de 518.98 us y un máximo de 921.45 us. 
     
-`CUDA memcpy HtoD`: Esta actividad representa la transferencia de datos desde la memoria principal (host) al dispositivo GPU. Ocupa el 29.36% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 470.12 us, con un mínimo de 465.19 us y un máximo de 475.04 us. Estas transferencias son cruciales para enviar datos al dispositivo para su procesamiento.
+`CUDA memcpy HtoD`: Ocupa el 29.36% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 470.12 us, con un mínimo de 465.19 us y un máximo de 475.04 us. 
     
-`writeOffset(float*, float*, float*, int, int)`: Esta función es parte de la aplicación y se ejecuta en el dispositivo GPU. Ocupa el 1.55% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 49.504 us. Esta función realiza alguna operación de escritura en la GPU con datos de entrada y salida.
+`writeOffset(float*, float*, float*, int, int)`: Esta función es parte de la aplicación y se ejecuta en el dispositivo GPU. Ocupa el 1.55% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 49.504 us. Esta función realiza alguna operación de escritura en la GPU con datos de entrada y salida. 
+Este kernel, llamado en la línea 153 después de establecer el tamaño de los bloques, verifica con la instrucción if si el k (índice de desplazamiento) está en un rango válido, lo que significa que es menor que n. Si lo está, se crea un nuevo valor para el elemento del array C en la posición k. Este valor es la suma de A[i] más B[i]
     
-`warmup(float*, float*, float*, int, int)`: Similar a la función anterior, esta también se ejecuta en el dispositivo GPU. Ocupa el 1.49% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 47.712 us. Realiza una operación de "calentamiento" en la GPU.
+`warmup(float*, float*, float*, int, int)`: Ocupa el 1.49% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 47.712 us. Realiza una operación de "calentamiento" en la GPU.
     
-`writeOffsetUnroll2(float*, float*, float*, int, int)`: Otra función que se ejecuta en la GPU. Ocupa el 0.91% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 29.120 us. Realiza alguna operación de escritura en la GPU con datos de entrada y salida.
+`writeOffsetUnroll2(float*, float*, float*, int, int)`:Ocupa el 0.91% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 29.120 us. Realiza alguna operación de escritura en la GPU con datos de entrada y salida.
+Este proceso, llamado en la línea 166, hace lo mismo que writeoffset, pero si la condición se cumple, en lugar de procesar un solo elemento a la vez, procesa dos elementos, uno en K y otro en K + blockdim, utilizando los hilos para realizar más procesos en lugar de usar múltiples hilos.
     
 `writeOffsetUnroll4(float*, float*, float*, int, int)`: Similar a la función anterior, esta también se ejecuta en la GPU. Ocupa el 0.72% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta función es de 23.072 us. Realiza alguna operación de escritura en la GPU con datos de entrada y salida.
+Esta operación, llamada en la línea 179, hace lo mismo que writeoffset, pero aún mejor que unroll2. Hace que un hilo calcule el tiempo que tardaría la primera función en realizar 4, mejorando el tiempo y mostrando una mejor forma de utilizar el paralelismo en el código.
 
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo GPU. Ocupa el 92.61% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 193.08 ms, con un mínimo de 301.40 us y un máximo de 578.59 ms. Esta función se utiliza para asignar memoria en el dispositivo.
+
+**API calls:**
+
+`cudaMalloc`: Ocupa el 92.61% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 193.08 ms, con un mínimo de 301.40 us y un máximo de 578.59 ms Esta función se utiliza para asignar memoria en el dispositivo.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Ocupa el 6.01% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 37.576 ms.
+`cudaDeviceReset`: Ocupa el 6.01% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 37.576 ms.
     
-`cudaMemcpy`: Esta llamada se utiliza para transferir datos entre la CPU y el GPU. Ocupa el 0.83% del tiempo de ejecución y se llama cinco veces. El tiempo promedio de ejecución de cada llamada es de 1.0360 ms, con un mínimo de 537.40 us y un máximo de 2.0100 ms.
+`cudaMemcpy`: Ocupa el 0.83% del tiempo de ejecución y se llama cinco veces. El tiempo promedio de ejecución de cada llamada es de 1.0360 ms, con un mínimo de 537.40 us y un máximo de 2.0100 ms.
     
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.1550 ms.
+`cuDeviceGetPCIBusId`:Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.1550 ms.
     
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo. Ocupa el 0.11% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 229.17 us, con un mínimo de 186.80 us y un máximo de 276.10 us.
+`cudaFree`:Ocupa el 0.11% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 229.17 us, con un mínimo de 186.80 us y un máximo de 276.10 us.
     
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo. Ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 99.750 us, con un mínimo de 72.600 us y un máximo de 145.30 us.
+`cudaDeviceSynchronize`: Ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 99.750 us, con un mínimo de 72.600 us y un máximo de 145.30 us.
     
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo. Ocupa el 0.04% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 56.400 us, con un mínimo de 20.100 us y un máximo de 89.100 us.
+`cudaLaunchKernel`: Ocupa el 0.04% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 56.400 us, con un mínimo de 20.100 us y un máximo de 89.100 us.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 142 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 142 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
     
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.9000 us.
+`cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.9000 us.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.1000 us.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.1000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns.
+`cuDeviceGetCount`:Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
     
 `cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo. Ocupa el 0.00% del
 
@@ -481,39 +505,39 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
 
-
-`[CUDA memcpy HtoD]`: Representa una copia de memoria desde el host al dispositivo (GPU). Esta actividad ocupa el 52.15% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de esta copia es de 2.1117 ms, con un mínimo de 2.1117 ms y un máximo de 2.1117 ms.
+**GPU activities:**
+`[CUDA memcpy HtoD]`: Esta actividad ocupa el 52.15% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de esta copia es de 2.1117 ms, con un mínimo de 2.1117 ms y un máximo de 2.1117 ms.
     
-`[CUDA memcpy DtoH]`: Representa una copia de memoria desde el dispositivo al host. Esta actividad ocupa el 47.85% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de esta copia es de 1.9374 ms, con un mínimo de 1.9374 ms y un máximo de 1.9374 ms.
+`[CUDA memcpy DtoH]`: Esta actividad ocupa el 47.85% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de esta copia es de 1.9374 ms, con un mínimo de 1.9374 ms y un máximo de 1.9374 ms.
     
-
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo. Ocupa el 93.74% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 577.35 ms.
+**API calls:**
+`cudaMalloc`: Ocupa el 93.74% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 577.35 ms.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Ocupa el 5.15% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 31.729 ms.
+`cudaDeviceReset`: Ocupa el 5.15% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 31.729 ms.
     
-`cudaMemcpy`: Esta llamada se utiliza para copiar memoria entre el host y el dispositivo. Ocupa el 0.71% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 2.1928 ms.
+`cudaMemcpy`: Ocupa el 0.71% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 2.1928 ms.
     
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0994 ms.
+`cuDeviceGetPCIBusId`: Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0994 ms.
     
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo. Ocupa el 0.05% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 306.30 us.
+`cudaFree`:Ocupa el 0.05% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 306.30 us.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 145 ns.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 145 ns.
     
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 8.0000 us.
+`cudaSetDevice`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 8.0000 us.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.8000 us.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.8000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 466 ns.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 466 ns.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 450 ns.
+`cuDeviceGet`:Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 450 ns.
     
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
+`cudaGetLastError`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
     
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
     
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la memoria total del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 400 ns.
+`cuDeviceTotalMem`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 400 ns.
     
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
+`cuDeviceGetUuid`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
 
 ---
 
@@ -543,43 +567,44 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
 
+**GPU activities:**
 
+`[CUDA memcpy HtoD]`: Ocupa el 50.57% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de cada llamada es de 1.3036 ms, con un mínimo de 1.3036 ms y un máximo de 1.3036 ms.
+    
+`[CUDA memcpy DtoH]`: Ocupa el 49.43% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de cada llamada es de 1.2743 ms, con un mínimo de 1.2743 ms y un máximo de 1.2743 ms. 
 
-`[CUDA memcpy HtoD]`: Esta actividad representa una copia de memoria desde la CPU (Host) al dispositivo GPU (Device). Ocupa el 50.57% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de cada llamada es de 1.3036 ms, con un mínimo de 1.3036 ms y un máximo de 1.3036 ms. Esta actividad se utiliza para transferir datos desde la CPU al GPU.
+    **API calls:**    
+`cudaHostAlloc`: Ocupa el 93.65% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 564.84 ms. La función HostAlloc tiene un uso más alto que la cudaMalloc común, ya que permite que el host asigne la memoria al dispositivo, lo que acelera el cudamemcpy más de lo que normalmente lo haría, aunque puede 'degradar el rendimiento del sistema si se usa en exceso'.
     
-`[CUDA memcpy DtoH]`: Esta actividad representa una copia de memoria desde el dispositivo GPU al CPU. Ocupa el 49.43% del tiempo de ejecución y se llama una vez. El tiempo promedio de ejecución de cada llamada es de 1.2743 ms, con un mínimo de 1.2743 ms y un máximo de 1.2743 ms. Esta actividad se utiliza para transferir datos desde el GPU al CPU.
+`cudaDeviceReset`:Ocupa el 5.15% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 31.051 ms.
     
-`cudaHostAlloc`: Esta llamada se utiliza para asignar memoria en el host. Ocupa el 93.65% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 564.84 ms. Se utiliza para asignar memoria gestionada en el host.
+`cudaMemcpy`: Ocupa el 0.45% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 1.3660 ms, con un mínimo de 1.3368 ms y un máximo de 1.3951 ms.
     
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo. Ocupa el 5.15% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 31.051 ms.
+`cuDeviceGetPCIBusId`: Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0604 ms.
     
-`cudaMemcpy`: Esta llamada se utiliza para copiar datos entre la CPU y el GPU. Ocupa el 0.45% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 1.3660 ms, con un mínimo de 1.3368 ms y un máximo de 1.3951 ms.
+`cudaFreeHost`:Ocupa el 0.30% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 1.8091 ms.
     
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo. Ocupa el 0.34% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0604 ms.
+`cudaMalloc`: Ocupa el 0.06% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 342.90 us.
     
-`cudaFreeHost`: Esta llamada se utiliza para liberar memoria en el host. Ocupa el 0.30% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 1.8091 ms.
+`cudaFree`: Ocupa el 0.04% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 261.00 us.
     
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo GPU. Ocupa el 0.06% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 342.90 us.
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 152 ns, con un mínimo de 100 ns y un máximo de 900 ns.
     
-`cudaFree`: Esta llamada se utiliza para liberar memoria previamente asignada en el dispositivo. Ocupa el 0.04% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 261.00 us.
+`cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.2000 us.
     
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 152 ns, con un mínimo de 100 ns y un máximo de 900 ns.
+`cudaGetDeviceProperties`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.4000 us.
     
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 7.2000 us.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 1.0000 us, con un mínimo de 100 ns y un máximo de 900 ns.
     
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.4000 us.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 600 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
     
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 1.0000 us, con un mínimo de 100 ns y un máximo de 900 ns.
+`cudaGetLastError`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
     
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 600 ns, con un mínimo de 100 ns y un máximo de 1.0000 us.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
     
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns.
+`cuDeviceTotalMem`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
     
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns.
-    
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la memoria total del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 300 ns.
-    
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
+`cuDeviceGetUuid`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns.
 
 ---
 
@@ -611,47 +636,49 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     500ns         1     500ns     500ns     500ns  cuDeviceTotalMem
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
+**GPU activities:**
 
-
-`[CUDA memcpy DtoH]`: Esta actividad representa la ejecución de una operación de copia de datos desde el dispositivo GPU a la memoria del host. Ocupa el 49.71% del tiempo de ejecución y se llama una vez. El tiempo de ejecución promedio de esta llamada es de 992.10 us, con un mínimo de 992.10 us y un máximo de 992.10 us. Esta operación se utiliza para transferir datos desde la GPU a la CPU.
+`[CUDA memcpy DtoH]`: Esta actividad representa la ejecución de una operación de copia de datos desde el dispositivo GPU a la memoria del host. Ocupa el 49.71% del tiempo de ejecución y se llama una vez. El tiempo de ejecución promedio de esta llamada es de 992.10 us, con un mínimo de 992.10 us y un máximo de 992.10 us. 
 
 `[CUDA memcpy HtoD]`: Esta actividad representa la ejecución de una operación de copia de datos desde la memoria del host al dispositivo GPU. Ocupa el 45.41% del tiempo de ejecución y se llama dos veces. El tiempo de ejecución promedio de cada llamada es de 453.23 us, con un mínimo de 447.23 us y un máximo de 459.23 us. Esta operación se utiliza para transferir datos desde la CPU a la GPU.
 
-`readOffset(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de una función llamada "readOffset". Ocupa el 2.48% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.408 us. Esta función realiza alguna operación relacionada con lectura de datos.
+`readOffset(float*, float*, float*, int, int)`: Ocupa el 2.48% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.408 us. Esta función se encarga de leer un segmento, dado por las matrices de flotantes que se pasan como parámetros, con un desplazamiento determinado (especificado por los enteros que se pasan como parámetros int).
 
-`warmup(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de una función llamada "warmup". Ocupa el 2.40% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 48.001 us. Esta función parece ser una fase de calentamiento del código.
+`warmup(float*, float*, float*, int, int)`: Esta actividad representa la ejecución de una función llamada "warmup". Ocupa el 2.40% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 48.001 us. 
 
-`cudaMalloc`: Esta llamada se utiliza para asignar memoria en el dispositivo GPU. Ocupa el 93.88% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 201.26 ms, con un mínimo de 313.00 us y un máximo de 603.14 ms. Esta función se utiliza para reservar espacio en la memoria del dispositivo.
+**API calls:**
 
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo GPU. Ocupa el 5.02% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 32.299 ms. La función se utiliza para restablecer el dispositivo GPU a su estado inicial.
+`cudaMalloc`: Ocupa el 93.88% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 201.26 ms, con un mínimo de 313.00 us y un máximo de 603.14 ms. 
 
-`cudaMemcpy`: Esta llamada se utiliza para copiar datos entre el host y el dispositivo GPU. Ocupa el 0.52% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 1.1213 ms, con un mínimo de 585.30 us y un máximo de 2.1168 ms. Esta función se utiliza para transferir datos entre la CPU y la GPU.
+`cudaDeviceReset`: Ocupa el 5.02% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 32.299 ms. 
 
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo GPU. Ocupa el 0.40% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.5464 ms. La función proporciona información sobre la conexión del dispositivo al bus PCI.
+`cudaMemcpy`: Ocupa el 0.52% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 1.1213 ms, con un mínimo de 585.30 us y un máximo de 2.1168 ms. 
 
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo GPU. Ocupa el 0.13% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 277.73 us, con un mínimo de 167.00 us y un máximo de 455.50 us. Esta función se utiliza para liberar la memoria en el dispositivo GPU.
+`cuDeviceGetPCIBusId`: Ocupa el 0.40% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.5464 ms.
 
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo GPU. Ocupa el 0.03% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 103.15 us, con un mínimo de 68.900 us y un máximo de 137.40 us. La sincronización asegura que todas las operaciones en el dispositivo se completen antes de continuar.
+`cudaFree`: Ocupa el 0.13% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 277.73 us, con un mínimo de 167.00 us y un máximo de 455.50 us.
 
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo GPU. Ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 32.900 us, con un mínimo de 16.900 us y un máximo de 48.900 us. Esta función inicia la ejecución de kernels en el GPU.
+`cudaDeviceSynchronize`: Ocupa el 0.03% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 103.15 us, con un mínimo de 68.900 us y un máximo de 137.40 us. La sincronización asegura que todas las operaciones en el dispositivo se completen antes de continuar.
 
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 156 ns, con un mínimo de 100 ns y un máximo de 1.4000 us. La función proporciona información sobre diversas características del dispositivo.
+`cudaLaunchKernel`: Ocupa el 0.01% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 32.900 us, con un mínimo de 16.900 us y un máximo de 48.900 us. 
 
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.5000 us. La función permite elegir el dispositivo en el que se realizarán las operaciones subsiguientes.
+`cuDeviceGetAttribute`:Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 156 ns, con un mínimo de 100 ns y un máximo de 1.4000 us. 
 
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.9000 us. La función proporciona información detallada sobre las capacidades del dispositivo.
+`cudaSetDevice`:Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.5000 us.
 
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos GPU. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 200 ns, con un mínimo de 100 ns y un máximo de 600 ns. La función determina cuántos dispositivos GPU están disponibles.
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 4.9000 us.
 
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 600 ns, con un mínimo de 100 ns y un máximo de 1.0000 us. La función proporciona detalles sobre el dispositivo seleccionado.
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 200 ns, con un mínimo de 100 ns y un máximo de 600 ns.
 
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns. La función se utiliza para verificar si se ha producido algún error en las operaciones anteriores.
+`cuDeviceGet`: Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 600 ns, con un mínimo de 100 ns y un máximo de 1.0000 us. 
 
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 800 ns. La función devuelve el nombre del dispositivo seleccionado.
+`cudaGetLastError`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns. 
 
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la cantidad total de memoria disponible en el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 500 ns. La función proporciona información sobre la capacidad de memoria del dispositivo.
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 800 ns.
 
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns. La función proporciona un identificador único que puede utilizarse para identificar de manera única el dispositivo.
+`cuDeviceTotalMem`:  Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 500 ns. 
+
+`cuDeviceGetUuid`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns. 
 
 ---
 ###   readSegmentUnroll
@@ -686,53 +713,57 @@ cudaLaunchKernel: Esta llamada ocupa el 0.01% del tiempo de ejecución y se llam
                     0.00%     400ns         1     400ns     400ns     400ns  cuDeviceTotalMem
                     0.00%     200ns         1     200ns     200ns     200ns  cuDeviceGetUuid
 ~~~
-`[CUDA memcpy DtoH]`: Representa la ejecución de operaciones de copia de datos desde el dispositivo GPU a la memoria del host. Ocupa el 64.13% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 689.07 us, con un mínimo de 470.56 us y un máximo de 864.49 us. Estas operaciones transfieren datos desde la GPU a la CPU.
+**GPU activities:**
+`[CUDA memcpy DtoH]`: Ocupa el 64.13% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 689.07 us, con un mínimo de 470.56 us y un máximo de 864.49 us. Esta operación, llamada en las líneas 166 y 180, copia los valores del dispositivo, que son el resultado de un kernel, al host para que puedan ser mostrados al usuario.
 
-`[CUDA memcpy HtoD]`: Representa la ejecución de operaciones de copia de datos desde la memoria del host al dispositivo GPU. Ocupa el 27.79% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 447.83 us, con un mínimo de 446.53 us y un máximo de 449.12 us. Estas operaciones transfieren datos desde la CPU a la GPU.
+`[CUDA memcpy HtoD]`: Ocupa el 27.79% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 447.83 us, con un mínimo de 446.53 us y un máximo de 449.12 us.Esta operación, realizada en las líneas 143 y 144, copia una versión de los valores iniciales al dispositivo para realizar operaciones en ellos y enviarlos de vuelta. Esto tomó menos tiempo que el DtoH porque el dispositivo puede procesar más rápido debido a su reloj en comparación con el host.
 
-`[CUDA memset]`: Representa la ejecución de operaciones de llenado de memoria en el dispositivo GPU. Ocupa el 1.94% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 15.648 us, con un mínimo de 15.360 us y un máximo de 16.320 us. Estas operaciones realizan un llenado de memoria en la GPU.
-    
-`readOffsetUnroll4(float*, float*, float*, int, int)`: Representa la ejecución de una función llamada "readOffsetUnroll4". Ocupa el 1.56% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 50.368 us. Esta función realiza alguna operación relacionada con la lectura de datos.
+`[CUDA memset]`: Ocupa el 1.94% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 15.648 us, con un mínimo de 15.360 us y un máximo de 16.320 us.
 
-`readOffset(float*, float*, float*, int, int)`: Representa la ejecución de una función llamada "readOffset". Ocupa el 1.55% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.984 us. Esta función parece estar relacionada con la lectura de datos.
+`readOffsetUnroll4(float*, float*, float*, int, int)`: Ocupa el 1.56% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 50.368 us. 
 
-`readOffsetUnroll2(float*, float*, float*, int, int)`: Representa la ejecución de una función llamada "readOffsetUnroll2". Ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.632 us. Esta función está relacionada con la lectura de datos.
+`readOffset(float*, float*, float*, int, int)`: Ocupa el 1.55% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.984 us. 
 
-`warmup(float*, float*, float*, int, int)`: Representa la ejecución de una función llamada "warmup". Ocupa el 1.49% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 47.904 us. Esta función parece ser una fase de calentamiento del código.
+`readOffsetUnroll2(float*, float*, float*, int, int)`: Ocupa el 1.54% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 49.632 us. 
+
+`warmup(float*, float*, float*, int, int)`: Ocupa el 1.49% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 47.904 us. 
   
-`cudaMalloc`: Se utiliza para asignar memoria en el dispositivo GPU. Ocupa el 93.30% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 197.49 ms, con un mínimo de 309.10 us y un máximo de 591.77 ms. Esta función se utiliza para reservar espacio en la memoria del dispositivo.
-
-`cudaDeviceReset`: La función `cudaDeviceReset` se utiliza para reiniciar el dispositivo GPU. Ocupa el 5.46% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 34.676 ms. La función se utiliza para restablecer el dispositivo GPU a su estado inicial.
-
-`cudaMemcpy`: Esta llamada se utiliza para copiar datos entre el host y el dispositivo GPU. Ocupa el 0.69% del tiempo de ejecución y se llama cinco veces. El tiempo promedio de ejecución de cada llamada es de 881.04 us, con un mínimo de 498.20 us y un máximo de 1.8633 ms. Esta función se utiliza para transferir datos entre la CPU y la GPU.
-
-`cuDeviceGetPCIBusId`: Esta llamada se utiliza para obtener el identificador del bus PCI del dispositivo GPU. Ocupa el 0.32% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0617 ms. La función proporciona información sobre la conexión del dispositivo al bus PCI.
-
-`cudaFree`: Esta llamada se utiliza para liberar la memoria previamente asignada en el dispositivo GPU. Ocupa el 0.12% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 249.87 us, con un mínimo de 170.00 us y un máximo de 390.60 us. Esta función se utiliza para liberar la memoria en el dispositivo GPU.
-
-`cudaDeviceSynchronize`: Esta llamada se utiliza para sincronizar el dispositivo GPU. Ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 89.325 us, con un mínimo de 71.700 us y un máximo de 130.70 us. La sincronización asegura que todas las operaciones en el dispositivo se completen antes de continuar.
-
-`cudaMemset`: Representa la ejecución de operaciones de llenado de memoria en el dispositivo GPU utilizando la función `cudaMemset`. Ocupa el 0.02% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 36.225 us, con un mínimo de 22.500 us y un máximo de 52.700 us. Estas operaciones llenan la memoria con un valor específico.
-
-`cudaLaunchKernel`: Esta llamada se utiliza para lanzar un kernel en el dispositivo GPU. Ocupa el 0.01% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 22.825 us, con un mínimo de 9.4000 us y un máximo de 47.700 us. Los kernels son funciones que se ejecutan en la GPU.
-
-`cuDeviceGetAttribute`: Esta llamada se utiliza para obtener atributos del dispositivo. Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 144 ns, con un mínimo de 100 ns y un máximo de 1.3000 us. Esta función proporciona información sobre el dispositivo GPU.
-
-`cudaSetDevice`: Se utiliza para seleccionar el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 6.9000 us. Esta función se utiliza para elegir el dispositivo GPU que se utilizará.
-
-`cudaGetDeviceProperties`: Esta llamada se utiliza para obtener las propiedades del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.7000 us. La función proporciona información detallada sobre las características del dispositivo GPU.
-
-`cuDeviceGetCount`: Esta llamada se utiliza para obtener el número de dispositivos GPU disponibles. Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns. Esta función informa sobre la cantidad de dispositivos GPU en el sistema.
-
-`cuDeviceGet`: Esta llamada se utiliza para obtener información del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us. Esta función proporciona detalles sobre el dispositivo GPU.
-
-`cudaGetLastError`: Esta llamada se utiliza para obtener el último error ocurrido en el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns. Esta función se emplea para verificar si se produjeron errores en las operaciones previas.
-
-`cuDeviceGetName`: Esta llamada se utiliza para obtener el nombre del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns. La función proporciona el nombre del dispositivo GPU.
+ **API calls:**
  
-`cuDeviceTotalMem`: Esta llamada se utiliza para obtener la cantidad total de memoria disponible en el dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 400 ns. La función proporciona información sobre la capacidad de memoria del dispositivo.
+`cudaMalloc`: Ocupa el 93.30% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 197.49 ms, con un mínimo de 309.10 us y un máximo de 591.77 ms.
 
-`cuDeviceGetUuid`: Esta llamada se utiliza para obtener el identificador único del dispositivo GPU. Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns. La función proporciona un identificador único que puede utilizarse para identificar de manera única el dispositivo.
+`cudaDeviceReset`: Ocupa el 5.46% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 34.676 ms. 
+
+`cudaMemcpy`: Ocupa el 0.69% del tiempo de ejecución y se llama cinco veces. El tiempo promedio de ejecución de cada llamada es de 881.04 us, con un mínimo de 498.20 us y un máximo de 1.8633 ms.
+
+`cuDeviceGetPCIBusId`: Ocupa el 0.32% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 2.0617 ms.
+
+`cudaFree`: Ocupa el 0.12% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 249.87 us, con un mínimo de 170.00 us y un máximo de 390.60 us. 
+
+`cudaDeviceSynchronize`: Ocupa el 0.06% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 89.325 us, con un mínimo de 71.700 us y un máximo de 130.70 us.
+
+`cudaMemset`: Representa la ejecución de operaciones de llenado de memoria en el dispositivo GPU utilizando la función
+`cudaMemset`. Ocupa el 0.02% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 36.225 us, con un mínimo de 22.500 us y un máximo de 52.700 us. 
+
+`cudaLaunchKernel`: Ocupa el 0.01% del tiempo de ejecución y se llama cuatro veces. El tiempo promedio de ejecución de cada llamada es de 22.825 us, con un mínimo de 9.4000 us y un máximo de 47.700 us.
+
+`cuDeviceGetAttribute`: Ocupa el 0.00% del tiempo de ejecución y se llama 101 veces. El tiempo promedio de ejecución de cada llamada es de 144 ns, con un mínimo de 100 ns y un máximo de 1.3000 us.
+
+`cudaSetDevice`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 6.9000 us. 
+
+`cudaGetDeviceProperties`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 5.7000 us. 
+
+`cuDeviceGetCount`: Ocupa el 0.00% del tiempo de ejecución y se llama tres veces. El tiempo promedio de ejecución de cada llamada es de 400 ns, con un mínimo de 100 ns y un máximo de 900 ns. 
+
+`cuDeviceGet`:Ocupa el 0.00% del tiempo de ejecución y se llama dos veces. El tiempo promedio de ejecución de cada llamada es de 550 ns, con un mínimo de 100 ns y un máximo de 1.0000 us. 
+
+`cudaGetLastError`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 900 ns. 
+
+`cuDeviceGetName`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 700 ns. 
+ 
+`cuDeviceTotalMem`: Ocupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 400 ns. 
+
+`cuDeviceGetUuid`: EOcupa el 0.00% del tiempo de ejecución y se llama una vez. El tiempo de ejecución de esta llamada es de 200 ns. 
 
 
 
